@@ -1,0 +1,50 @@
+Parameters:
+    myVPC:
+        Description: YAML Script Used to deploy my Challenge 1 VPC
+        Type: AWS::EC2::VPC::Id
+        Default: vpc-0ad3116c
+    publicSubnet:
+        Description: YAML Script Used to deploy my Challenge 1 Subnet
+        Type: AWS::EC2::Subnet::Id
+        Default: subnet-4360dd25 
+    AMItoUse:
+        Description: AMI to use for my base image
+        Type: String
+        Default: "ami-0d5075a2643fdf738"
+Resources:
+  myWebAccessSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to our test host Challenge-1-Udacity-Devops-Nano-Degree
+      VpcId:
+        Ref: myVPC
+      SecurityGroupEgress: 
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
+      SecurityGroupIngress: 
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+  myWebServerInstance: 
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.micro
+      ImageId: !Ref AMItoUse
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: "true"
+          DeviceIndex: "0"
+          GroupSet:
+            - Ref: "myWebAccessSecurityGroup"
+          SubnetId:
+            Ref: "publicSubnet"
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum install -y httpd
+          systemctl start httpd
+
+      
